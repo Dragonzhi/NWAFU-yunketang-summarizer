@@ -2,6 +2,8 @@
 
 西农智慧课堂（ylb.nwafu.edu.cn）课堂实录总结 skill。适配 Trae / Claude Code / Codex 等支持 Agent Skills 规范（SKILL.md）的 agent。
 
+> **免责声明**：本工具仅供个人学习复习使用，须登录使用者本人账号查看本人有权限的课程内容，不得用于爬取他人数据或干扰平台。请克制使用；因使用本工具导致的账号风控、接口变更失效等情况由使用者自行承担。config.json 含个人凭证，切勿分享或上传。
+
 ## 安装（Trae）
 
 1. Trae 支持用户级与项目级 Skill（完整兼容 SKILL.md 规范）
