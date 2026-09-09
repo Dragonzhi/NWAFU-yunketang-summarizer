@@ -1,0 +1,14 @@
+{
+  "token": "",
+  "student_id": "<你的用户ID>",
+  "user_id": "<同 student_id>",
+  "school_year": "2026-2027",
+  "term": "1",
+  "group_ids": {
+    "<课程id>": "<班级id>"
+  },
+  "archive_dir": "云课堂总结",
+  "_说明": "复制本文件为 config.json 后填写：student_id/user_id 登录平台后抓包课程列表接口可查；group_ids 为 课程id→班级id 映射（新学期需更新，可用 yunketang_client.py courses 查）；token 由 sso_login.py 或 refresh_token.py 自动写入（约一小时滑动过期），无需手填；username/password 仅存本机用于自动登录，不想存则留空走手动刷新；archive_dir 是归档目录，可改绝对路径",
+  "username": "",
+  "password": ""
+}

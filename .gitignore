@@ -1,0 +1,9 @@
+# 凭证与个人配置（含 token / 学号密码 / 个人ID，绝不入库）
+config.json
+
+# 归档的私人学习笔记（若 archive_dir 指到本目录内）
+云课堂总结/
+
+# Python
+__pycache__/
+*.pyc
