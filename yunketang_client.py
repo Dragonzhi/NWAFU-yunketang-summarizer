@@ -16,6 +16,10 @@
   GET  /teachingApi/v1/videoinfo/student/courses                课程列表（studentId/schoolYear/term）
   POST /teachingApi/v1/videoinfos/page                          节次列表（userId/groupIds/openStatus/week/schoolYear/term/page/pageSize）
   GET  /lzaiapi/v1/spotbroadcastspeechrecognitions?taskId=x     提词全文（逐句+时间戳）
+  GET  /teachingApi/v1/recordvideo/{id}/summarize               平台AI要点总结（aiClassroom页）
+  GET  /teachingApi/v1/recordvideo/{id}/abstracts               平台AI摘要列表
+  GET  /teachingApi/v1/recordvideo/{id}/mindmap                 平台AI思维导图（mindMapContent JSON串）
+  GET  /teachingApi/v1/airecordvideokeywordstatistics/list      平台AI关键词统计（recordVideoInfoId=id）
 """
 import base64
 import hashlib
@@ -128,6 +132,41 @@ class YunketangClient:
             f'?identifySensitiveWord=true&taskId={task_id}&validCode={vc}')
         return data[0]['speechRecognitionResults'] if data else []
 
+    # ---------- 平台自带 AI 产出（aiClassroom 页，逆向自前端 chunk） ----------
+    # 注意：AI 产物按节课异步生成，「未找到」(B99999) 是正常空态而非故障
+    def _ai_get(self, url: str):
+        try:
+            return self._get_json(url)
+        except RuntimeError as e:
+            if '未找到' in str(e):
+                return None
+            raise
+
+    def ai_summary(self, record_id: str) -> dict | None:
+        """平台 AI 要点总结 {summarizeContent: ...}；未生成返回 None"""
+        return self._ai_get(
+            f'{BASE}/teachingApi/v1/recordvideo/{record_id}/summarize'
+            f'?validCode={md5("id=" + record_id + DEFAULT_SALT)}')
+
+    def ai_abstracts(self, record_id: str) -> list | None:
+        """平台 AI 摘要要点列表；未生成返回 None"""
+        return self._ai_get(
+            f'{BASE}/teachingApi/v1/recordvideo/{record_id}/abstracts'
+            f'?validCode={md5("id=" + record_id + DEFAULT_SALT)}')
+
+    def ai_mindmap(self, record_id: str) -> dict | None:
+        """平台 AI 思维导图 {mindMapContent: '<json字符串>'}；未生成返回 None"""
+        return self._ai_get(
+            f'{BASE}/teachingApi/v1/recordvideo/{record_id}/mindmap'
+            f'?validCode={md5("id=" + record_id + DEFAULT_SALT)}')
+
+    def ai_keywords(self, record_id: str) -> list:
+        """平台 AI 关键词统计（词云），无则空列表"""
+        return self._get_json(
+            f'{BASE}/teachingApi/v1/airecordvideokeywordstatistics/list'
+            f'?recordVideoInfoId={record_id}&validCode='
+            f'{md5("recordVideoInfoId=" + record_id + DEFAULT_SALT)}')
+
 
 def transcript_to_text(results: list) -> str:
     """逐句转写合并成带时间戳的纯文本（每分钟一行锚点）"""
@@ -163,8 +202,32 @@ def main():
         course_id = sys.argv[2]
         for v in client.videos(cfg['user_id'], cfg['group_ids'][course_id],
                                cfg['school_year'], cfg['term']):
-            print(f"{v['taskId']}  {v['videoInfoName']}  {v['startTime'][:16]}"
-                  f"  {v['teacherNames']}")
+            print(f"{v.get('id', '-')}  {v['taskId']}  {v['videoInfoName']}  "
+                  f"{v['startTime'][:16]}  {v['teacherNames']}")
+    elif cmd == 'ai':
+        rid = sys.argv[2]
+        print('=== 平台AI要点总结 ===')
+        print(((client.ai_summary(rid) or {}).get('summarizeContent')) or '（未生成）')
+        print('=== 平台AI摘要 ===')
+        abstracts = client.ai_abstracts(rid) or []
+        for a in abstracts:
+            print(json.dumps(a, ensure_ascii=False))
+        if not abstracts:
+            print('（未生成）')
+        print('=== 平台AI思维导图 ===')
+        mc = (client.ai_mindmap(rid) or {}).get('mindMapContent')
+        if mc:
+            def walk(node, depth=0):
+                print('  ' * depth + node.get('topic', ''))
+                for ch in node.get('children', []):
+                    walk(ch, depth + 1)
+            walk(json.loads(mc))
+        else:
+            print('（未生成）')
+        print('=== 平台AI关键词 ===')
+        kws = client.ai_keywords(rid) or []
+        print('  '.join(f"{k['keywordName']}x{k['keywordCount']}" for k in kws)
+              or '（无）')
     elif cmd == 'transcript':
         task_id = sys.argv[2]
         out = sys.argv[3] if len(sys.argv) > 3 else None

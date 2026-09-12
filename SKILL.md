@@ -2,7 +2,7 @@
 name: yunketang-summarizer
 description: 西农智慧课堂（云课堂）课堂实录总结工具。当用户说「总结今天的课」「总结课程」「课堂提词」「云课堂」「课堂实录」「把XX的课都总结了」「出复习提纲」或提到某门课的复习/总结需求时使用。拉取课堂录像的语音识别提词，总结为一页纸速览 + 老师强调的考点 + 带时间戳的详细笔记 + 作业通知，并归档为复习笔记库；支持批量多节课总结与期末合并提纲。
 metadata:
-  version: "2.0"
+  version: "2.1"
 ---
 
 # 西农云课堂总结器（yunketang-summarizer）
@@ -64,6 +64,16 @@ python3 yunketang_client.py transcript <taskId> /tmp/transcript.txt
 - 提词开头 0:00 至正式开讲之间常有课前教室闲聊杂音（特征：话题破碎、无教学内容），总结时忽略
 - 时间戳以 `[mm:00]` 分行，保留用于回跳定位
 - ASR 可能把「云计算」识别成奇怪的同音词，结合上下文理解，不要照抄明显的识别错误
+
+**可选：平台自带 AI 产出对照**
+
+`videos` 列表第一列是 `recordvideo id`，平台 AI 基于它生成要点（逆向自 aiClassroom 页）：
+
+```bash
+python3 yunketang_client.py ai <recordVideoId>
+```
+
+输出平台 AI 要点总结 / 摘要 / 思维导图（缩进大纲）/ 关键词。用途：与自己的总结**交叉核对查漏**；平台 AI 质量参差且无时间戳，不可照抄替代总结。AI 产物按节课异步生成，「（未生成）」属正常空态，跳过即可。
 
 ### 3. 总结（由当前 Agent 直接完成，无需外部 LLM API）
 
