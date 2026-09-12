@@ -30,21 +30,11 @@ cd <skill目录> && python3 yunketang_client.py keepalive
 ```
 
 - 输出包含学期信息（如 2026-2027）→ token 存活，继续
-- 报 `tokenExpired` / `401` / `Token is null` → 按优先级依次尝试：
-
-**首选：自动登录**（config.json 已填 username/password 时）
-
-```bash
-python3 sso_login.py
-```
-
-脚本会先探测验证码需求：无需验证码则全自动拿新凭证；若输出「需要图形验证码」（近期失败次数过多触发风控）则转降级路径，**不要反复重试**。
-
-**降级：手动刷新**（验证码触发 / 未存密码时）
+- 报 `tokenExpired` / `401` / `Token is null` → 手动刷新：
 
 引导用户：
 
-> 自动登录暂时被验证码拦住了。在浏览器登录智慧课堂后，点书签栏的「复制云课堂凭证」（或 F12 控制台执行 console.log(localStorage.getItem('sessionId'))），把复制到的内容发我。
+> token 过期了。在浏览器登录智慧课堂后，点书签栏的「复制云课堂凭证」（或 F12 控制台执行 console.log(localStorage.getItem('sessionId'))），把复制到的内容发我。
 
 收到用户发来的 JSON 后：
 
@@ -65,6 +55,8 @@ python3 refresh_token.py '<用户发来的原文>'
 ```bash
 python3 yunketang_client.py transcript <taskId> /tmp/transcript.txt
 ```
+
+**转写未完成早退**：输出为空（提示「已写入 …，0 字」）说明该节提词尚未生成。此时立即告知用户「这节课的转写可能还没出，请到智慧课堂网页确认转写完成后再来」，然后停止本节流程；**不要重试、不要轮询**（转写由平台异步生成，出稿时间不稳定，通常课后半天到一天）。这正是不浪费 token 的关键关卡。
 
 清洗要点：
 - 提词开头 0:00 至正式开讲之间常有课前教室闲聊杂音（特征：话题破碎、无教学内容），总结时忽略
@@ -116,5 +108,5 @@ python3 yunketang_client.py transcript <taskId> /tmp/transcript.txt
 
 - 「拉提词」「把今天课的原文给我」：只执行步骤 0-2，原文贴回或存文件，不总结
 - 用户发来的 sessionId 原文含敏感凭证，处理后不留在对话外
-- config.json 含个人凭证（token/学号/密码），不得外传分享；代码可分享给其他同学，新用户参照 config.example.json 配置
+- config.json 含个人凭证（token/学号），不得外传分享；代码可分享给其他同学，新用户参照 config.example.json 配置
 - 批量总结（多节课/整学期）时逐节拉提词逐节总结，每节独立归档；途中某节接口失败则记下跳过，最后向用户汇报失败清单

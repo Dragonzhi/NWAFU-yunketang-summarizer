@@ -18,24 +18,16 @@
 
 ## 首次配置
 
-1. `pip install pycryptodome requests`
-2. 复制 `config.example.json` 为 `config.json`（config.json 含个人凭证，已被 .gitignore 排除），然后打开它：确认 `student_id` / `group_ids` / `school_year` / `term` 已填；填入 `username`（学号）和 `password`（仅存本机，用于自动登录，不想存则留空走手动刷新）
-3. 跑一次 `python3 sso_login.py` 验证自动登录，或 `python3 refresh_token.py` 手动刷新
+1. `pip install pycryptodome`
+2. 复制 `config.example.json` 为 `config.json`（config.json 含个人凭证，已被 .gitignore 排除），然后打开它：确认 `student_id` / `group_ids` / `school_year` / `term` 已填
+3. 登录一次智慧课堂网页版，按下方书签let/F12 方式取 sessionId，跑 `python3 refresh_token.py` 验证连通
 4. 学期切换时更新 `school_year` / `term` / `group_ids`（抓包新学期的课程列表可得）
 
 ## 凭证刷新（token 约一小时滑动过期）
 
-### 方式零：自动登录（首选）
+> 提示：课堂转写由平台异步生成、出稿时间不稳定，总结前建议先在平台上确认目标节次的转写已完成——反正都要登录平台，顺手取凭证刷新即可。
 
-`config.json` 填了 `username` / `password` 后，直接：
-
-```bash
-python3 sso_login.py
-```
-
-脚本自动探测验证码风控，无需验证码则全自动拿到新凭证并验证。失败计数触发验证码时会提示改走下方手动路径，此时不要重试。
-
-### 方式一：书签let（手动刷新，两秒）
+### 方式一：书签let（两秒）
 
 在浏览器书签栏新建书签，名称随意（如「复制云课堂凭证」），地址填：
 
@@ -74,6 +66,5 @@ console.log(localStorage.getItem('sessionId'))
 
 - `SKILL.md` — agent 执行流程说明
 - `yunketang_client.py` — 平台接口客户端（签名/解密/提词）
-- `sso_login.py` — 自动登录（CAS 加密逆向 + ticket 兑换，需要 config 填账号密码）
 - `refresh_token.py` — 凭证刷新工具（配合书签let/F12 手动刷新）
-- `config.json` — 凭证与配置（含 token 和密码，不要外传）
+- `config.json` — 凭证与配置（含 token，不要外传）

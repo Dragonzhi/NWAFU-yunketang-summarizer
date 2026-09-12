@@ -9,15 +9,14 @@
 - **自动归档**：按课程分文件夹、按周次命名，攒成自己的复习笔记库
 - **批量模式**：「把云计算这两周的课都总结了」「整学期补档」
 - **期末复习提纲**：合并全部笔记，汇总高频考点与概念地图
-- **凭证自动刷新**：支持 CAS 自动登录，token 过期无需手动折腾（也保留书签/F12 手动降级路径）
+- **凭证手动刷新**：token 过期时，在智慧课堂网页用书签let/F12 一秒取凭证，粘贴给 agent 即可
 
 ## 快速开始
 
 ```bash
-pip install pycryptodome requests
+pip install pycryptodome
 cp config.example.json config.json   # Windows: copy config.example.json config.json
-# 编辑 config.json 填入个人信息（详见 INSTALL.md）
-python sso_login.py                  # 验证自动登录
+# 编辑 config.json 填入个人信息，登录智慧课堂网页版后按书签let/F12 取 sessionId 刷新凭证（详见 INSTALL.md）
 ```
 
 然后把本文件夹放入 agent 的 skills 目录，对它说「总结今天的课」即可。
@@ -30,7 +29,6 @@ python sso_login.py                  # 验证自动登录
 |---|---|
 | `SKILL.md` | agent 执行流程（Skill 规范入口） |
 | `yunketang_client.py` | 平台接口客户端：签名/解密/拉提词 |
-| `sso_login.py` | CAS 自动登录（config 填学号密码后全自动） |
 | `refresh_token.py` | 凭证手动刷新（配合书签let / F12） |
 | `config.example.json` | 配置模板，复制为 config.json 后填写 |
 | `config.json` | 个人凭证与配置（**不入库，切勿分享**） |
