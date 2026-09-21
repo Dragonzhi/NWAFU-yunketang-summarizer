@@ -25,6 +25,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -194,6 +195,27 @@ def _load_config():
         return json.load(f)
 
 
+_HEX32 = re.compile(r'^[0-9a-fA-F]{32}$')
+
+
+def _validate_id(cfg: dict) -> list:
+    """校验 student_id / user_id，返回非法的字段提示；全部合法返回空列表。"""
+    problems = []
+    for key in ('student_id', 'user_id'):
+        val = str(cfg.get(key, '')).strip()
+        if not val:
+            problems.append(f'{key} 为空')
+        elif re.fullmatch(r'\d{8,12}', val):
+            problems.append(
+                f'{key}: "{val}" 看起来是学号。本字段需要的是平台内部 userId '
+                '（32 位十六进制），不是学号，获取方式见 INSTALL.md')
+        elif not _HEX32.match(val):
+            problems.append(
+                f'{key}: "{val}" 不是 32 位十六进制，不是平台内部 userId。'
+                '获取方式见 INSTALL.md「怎么拿到 student_id / user_id」')
+    return problems
+
+
 def main():
     import sys
     cfg = _load_config()
@@ -203,10 +225,44 @@ def main():
     if cmd == 'keepalive':
         print('保活/连通性:', client.keepalive())
     elif cmd == 'courses':
+        problems = _validate_id(cfg)
+        if problems:
+            print('配置校验未通过：')
+            for p in problems:
+                print(' -', p)
+            return
         for c in client.courses(cfg['student_id'], cfg['school_year'], cfg['term']):
             print(f"{c['courseId']}  {c['courseName']}[{c['classNames'].split('[')[1]}"
                   f"  最近更新 {c['maxUpdateDate']}  教师 {c['teacherNames']}")
+    elif cmd == 'whoami':
+        # 用当前 token 调课程列表接口，把识别到的 studentId 打出来供填入 config.json
+        vc = valid_code_default()
+        url = (f'{BASE}/teachingApi/v1/videoinfo/student/courses'
+               f'?studentId=probe&schoolYear={cfg.get("school_year", "")}'
+               f'&term={cfg.get("term", "")}&validCode={vc}')
+        try:
+            raw = client._request(url)
+            json.loads(raw)
+        except Exception as e:
+            print(f'whoami 请求失败：{e}\n请确认 token 有效。')
+            return
+        found = []
+        for key in ('studentId', 'studentID', 'userId', 'userID'):
+            m = re.search(r'"%s"\s*:\s*"([0-9a-fA-F]{32})"' % key, raw)
+            if m and m.group(1) not in found:
+                found.append(m.group(1))
+                print(f'{key} = {m.group(1)}')
+        if not found:
+            print('响应中未直接找到 32 位 hex 的 studentId/userId，打印原始响应供定位：')
+            print(raw[:1000])
+        print('提示：把上面的值分别填入 config.json 的 student_id / user_id（32 位十六进制，不是学号）。')
     elif cmd == 'videos':
+        problems = _validate_id(cfg)
+        if problems:
+            print('配置校验未通过：')
+            for p in problems:
+                print(' -', p)
+            return
         course_id = sys.argv[2]
         for v in client.videos(cfg['user_id'], cfg['group_ids'][course_id],
                                cfg['school_year'], cfg['term']):

@@ -23,6 +23,30 @@
 3. 登录一次智慧课堂网页版，按下方书签let/F12 方式取 sessionId，跑 `python refresh_token.py` 验证连通
 4. 学期切换时更新 `school_year` / `term` / `group_ids`（抓包新学期的课程列表可得）
 
+### 怎么拿到 student_id / user_id
+
+> **先说清**：这两个字段**不是学号**。学号是 8~12 位纯数字，
+> 而这里要填的是**平台内部 userId**，形态为 **32 位十六进制字符串**
+> （形如 `a1b2c3d4e5f60718293a4b5c6d7e8f90`）。填错时会表现为：
+> `courses` / `videos` 拉到空列表，而不是明确报错，很容易误以为是 token 过期。
+
+**自助获取命令（推荐）**：填入 token 后运行
+
+```bash
+python yunketang_client.py whoami
+```
+
+它会调课程列表接口，把响应中的 `studentId` / `userId` 直接打印出来，照着填进
+`config.json` 的 `student_id` / `user_id` 即可。若响应里恰好不含该字段，它会
+打印原始响应供定位。
+
+**手动抓包（等价路径）**：登录智慧课堂 → F12 → Network → 找到
+课程列表/课表请求（`/teachingApi/v1/videoinfo/student/courses`），
+请求或响应载荷里的 `studentId` / `userId` 字段即为所需值。
+
+> 提示：`courses` / `videos` 运行前会校验这两个字段——若是纯数字（像是学号）
+> 或不是 32 位十六进制，会直接给出定向报错，而不是回空列表让你猜，请按报错提示修正。
+
 ## 凭证刷新（token 约一小时滑动过期）
 
 > 提示：课堂转写由平台异步生成、出稿时间不稳定，总结前建议先在平台上确认目标节次的转写已完成——反正都要登录平台，顺手取凭证刷新即可。

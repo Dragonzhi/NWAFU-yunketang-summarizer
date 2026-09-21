@@ -55,6 +55,7 @@ python refresh_token.py
 - 列课程：`python yunketang_client.py courses`，默认取 `maxUpdateDate` 最近的课程；用户指定了课程名则匹配
 - 列节次：`python yunketang_client.py videos <courseId>`，默认取最新一节（列表第一条）；用户指定日期则匹配对应节次
 - 有多节课时向用户确认要总结哪节，除非用户说了「都总结」
+- `courses` / `videos` 若报「配置校验未通过」且指向 student_id / user_id，说明配成了学号（应为 32 位十六进制平台 userId），先用 `python yunketang_client.py whoami` 取正确值填入 config.json
 
 ### 2. 拉取提词并清洗
 
