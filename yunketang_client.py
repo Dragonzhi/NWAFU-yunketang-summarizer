@@ -26,10 +26,18 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import time
 import uuid
 
 from Crypto.Cipher import AES, DES
+
+# Windows 控制台默认 GBK，强制 UTF-8 输出，避免中文乱码/编码报错
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG = os.path.join(HERE, 'config.json')
@@ -90,8 +98,8 @@ class YunketangClient:
                '-H', f'x-Sign: {sign}'] + HEADERS_COMMON
         if body is not None:
             cmd += ['-H', 'Content-Type: application/json', '-d', json.dumps(body)]
-        r = subprocess.run(cmd, capture_output=True, text=True)
-        return r.stdout
+        r = subprocess.run(cmd, capture_output=True)
+        return r.stdout.decode("utf-8", errors="replace")
 
     def _get_json(self, url, body=None):
         out = self._request(url, body)
@@ -182,7 +190,7 @@ def transcript_to_text(results: list) -> str:
 
 # ---------- CLI ----------
 def _load_config():
-    with open(CONFIG) as f:
+    with open(CONFIG, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -233,7 +241,7 @@ def main():
         out = sys.argv[3] if len(sys.argv) > 3 else None
         text = transcript_to_text(client.transcript(task_id))
         if out:
-            with open(out, 'w') as f:
+            with open(out, 'w', encoding="utf-8") as f:
                 f.write(text)
             print(f'已写入 {out}，{len(text)} 字')
         else:
