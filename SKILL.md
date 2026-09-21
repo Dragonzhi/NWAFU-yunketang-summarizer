@@ -27,8 +27,12 @@ metadata:
 
 ### 0. 凭证获取（每次先做）
 
+> **命令说明**：文档统一用 `python`（Windows/macOS/Linux 均有；macOS/Linux 若是 `python3` 也可用）。
+> `&&` 是 Linux shell 语法，Windows PowerShell 5.1 **不支持**，请拆成两条命令顺序执行。若当前目录已是 skill 目录可跳过 `cd`。
+
 ```bash
-cd <skill目录> && python3 yunketang_client.py keepalive
+cd <skill目录>
+python yunketang_client.py keepalive
 ```
 
 - 输出包含学期信息（如 2026-2027）→ token 存活，继续
@@ -41,21 +45,21 @@ cd <skill目录> && python3 yunketang_client.py keepalive
 收到用户发来的 JSON 后：
 
 ```bash
-python3 refresh_token.py '<用户发来的原文>'
+python refresh_token.py
 ```
 
 输出「凭证验证通过」即继续。**不要催促用户，刷新是正常流程，一句话引导即可。**
 
 ### 1. 确定目标课与节次
 
-- 列课程：`python3 yunketang_client.py courses`，默认取 `maxUpdateDate` 最近的课程；用户指定了课程名则匹配
-- 列节次：`python3 yunketang_client.py videos <courseId>`，默认取最新一节（列表第一条）；用户指定日期则匹配对应节次
+- 列课程：`python yunketang_client.py courses`，默认取 `maxUpdateDate` 最近的课程；用户指定了课程名则匹配
+- 列节次：`python yunketang_client.py videos <courseId>`，默认取最新一节（列表第一条）；用户指定日期则匹配对应节次
 - 有多节课时向用户确认要总结哪节，除非用户说了「都总结」
 
 ### 2. 拉取提词并清洗
 
 ```bash
-python3 yunketang_client.py transcript <taskId> /tmp/transcript.txt
+python yunketang_client.py transcript <taskId> <存档路径>.txt
 ```
 
 **转写未完成早退**：输出为空（提示「已写入 …，0 字」）说明该节提词尚未生成。此时立即告知用户「这节课的转写可能还没出，请到智慧课堂网页确认转写完成后再来」，然后停止本节流程；**不要重试、不要轮询**（转写由平台异步生成，出稿时间不稳定，通常课后半天到一天）。这正是不浪费 token 的关键关卡。
@@ -70,7 +74,7 @@ python3 yunketang_client.py transcript <taskId> /tmp/transcript.txt
 `videos` 列表第一列是 `recordvideo id`，平台 AI 基于它生成要点（逆向自 aiClassroom 页）：
 
 ```bash
-python3 yunketang_client.py ai <recordVideoId>
+python yunketang_client.py ai <recordVideoId>
 ```
 
 输出平台 AI 要点总结 / 摘要 / 思维导图（缩进大纲）/ 关键词。用途：与自己的总结**交叉核对查漏**；平台 AI 质量参差且无时间戳，不可照抄替代总结。AI 产物按节课异步生成，「（未生成）」属正常空态，跳过即可。

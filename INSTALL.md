@@ -20,7 +20,7 @@
 
 1. `pip install pycryptodome`
 2. 复制 `config.example.json` 为 `config.json`（config.json 含个人凭证，已被 .gitignore 排除），然后打开它：确认 `student_id` / `group_ids` / `school_year` / `term` 已填
-3. 登录一次智慧课堂网页版，按下方书签let/F12 方式取 sessionId，跑 `python3 refresh_token.py` 验证连通
+3. 登录一次智慧课堂网页版，按下方书签let/F12 方式取 sessionId，跑 `python refresh_token.py` 验证连通
 4. 学期切换时更新 `school_year` / `term` / `group_ids`（抓包新学期的课程列表可得）
 
 ## 凭证刷新（token 约一小时滑动过期）
@@ -35,7 +35,7 @@
 javascript:(()=>{const s=localStorage.getItem('sessionId');if(!s){alert('未找到sessionId，请先登录智慧课堂');return;}navigator.clipboard.writeText(s).then(()=>alert('已复制到剪贴板'));})()
 ```
 
-使用：登录智慧课堂后，在平台任意页面点一下这个书签 → sessionId 进剪贴板 → 粘贴给 agent 或运行 `python3 refresh_token.py`（直接运行会提示粘贴）。
+使用：登录智慧课堂后，在平台任意页面点一下这个书签 → sessionId 进剪贴板 → 粘贴给 agent 或运行 `python refresh_token.py`（直接运行会提示粘贴）。
 
 ### 方式二：F12 控制台
 
