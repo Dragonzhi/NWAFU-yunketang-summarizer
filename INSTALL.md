@@ -30,15 +30,20 @@
 > （形如 `a1b2c3d4e5f60718293a4b5c6d7e8f90`）。填错时会表现为：
 > `courses` / `videos` 拉到空列表，而不是明确报错，很容易误以为是 token 过期。
 
-**自助获取命令（推荐）**：填入 token 后运行
+**一键自动回填（推荐）**：`refresh_token.py` 已支持解析 `localStorage.userInfo`，自动解出 userId 并写进 `config.json`。做法：
 
-```bash
-python yunketang_client.py whoami
-```
+1. 在浏览器书签栏新建书签，名称为「复制云课堂 userId」，地址填：
+   ```
+   javascript:(()=>{const s=localStorage.getItem('userInfo');if(!s){alert('请先登录智慧课堂');return;}navigator.clipboard.writeText(s).then(()=>alert('已复制到剪贴板'));})()
+   ```
+2. 登录智慧课堂后在平台页面点这个书签 → userInfo 进剪贴板；
+3. 运行（Windows/PowerShell 下用 stdin 最稳）：
+   ```bash
+   python refresh_token.py --userinfo --userinfo-stdin
+   ```
+   粘贴后自动回填 `student_id` / `user_id`，无需抓包；可配合 `--token` 一并刷新 token。
 
-它会调课程列表接口，把响应中的 `studentId` / `userId` 直接打印出来，照着填进
-`config.json` 的 `student_id` / `user_id` 即可。若响应里恰好不含该字段，它会
-打印原始响应供定位。
+**备选：whoami 命令**：`python yunketang_client.py whoami` 调课程列表接口打印 userId（需先有有效 token，且依赖接口返回该字段，不保证所有情况下都有）。
 
 **手动抓包（等价路径）**：登录智慧课堂 → F12 → Network → 找到
 课程列表/课表请求（`/teachingApi/v1/videoinfo/student/courses`），
@@ -60,6 +65,8 @@ javascript:(()=>{const s=localStorage.getItem('sessionId');if(!s){alert('未找�
 ```
 
 使用：登录智慧课堂后，在平台任意页面点一下这个书签 → sessionId 进剪贴板 → 粘贴给 agent 或运行 `python refresh_token.py`（直接运行会提示粘贴）。
+
+> 想顺带回填 `student_id` / `user_id`（免抓包）？再建一个「复制云课堂 userId」书签读 `localStorage.userInfo`，做法见上文「一键自动回填」小结。
 
 ### 方式二：F12 控制台
 
