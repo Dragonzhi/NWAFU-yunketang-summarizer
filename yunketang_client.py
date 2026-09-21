@@ -84,6 +84,24 @@ def token_from_session(raw_localstorage_value: str) -> str:
     return token
 
 
+def user_id_from_userinfo(raw_localstorage_value: str) -> str:
+    """用户 Console 导出的 localStorage.userInfo 原始 JSON -> 平台 userId。
+
+    userInfo 是 {data, time} 加密串，data 为 AES-ECB 加密的用户 JSON，
+    解密后含字段 userId（平台内部 id，32 位十六进制）与 userAccountNo（学号）。
+    返回 userId 明文；结构不符时抛 ValueError。
+    """
+    obj = json.loads(raw_localstorage_value)
+    aes = AES.new(AES_KEY, AES.MODE_ECB)
+    plain = aes.decrypt(base64.b64decode(obj['data']))
+    plain = plain[:-plain[-1]]                      # 去 PKCS7 填充
+    info = json.loads(plain.decode('utf-8'))
+    uid = info.get('userId')
+    if not isinstance(uid, str) or not uid:
+        raise ValueError('userInfo 中未找到 userId')
+    return uid
+
+
 class YunketangClient:
     def __init__(self, token: str):
         self.token = token
